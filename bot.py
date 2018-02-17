@@ -17,7 +17,7 @@ def get_user_tweets(user):
                     continue
         return tweets
     except tweepy.error.RateLimitError:
-        # error("Twitter API rate limit exceeded")
+        print "Twitter API rate limit exceeded"
         return []
 
 # Constants
@@ -41,8 +41,13 @@ for user in sys.argv: # Rest of args should be Twitter screen names
         temp = get_user_tweets(user)
         tweets.extend(temp)
     except tweepy.error.TweepError: # If error just continue to the next user
-        # error "Unable to fetch tweets of user '"+str(user)+"', skipping"
+        print "Unable to fetch tweets of user '"+str(user)+"', skipping"
         continue
+
+if len(tweets) == 0:
+    print >> sys.stderr, "No tweets were retrieved for the given users"
+    sys.stderr.flush()
+    sys.exit(0)
 
 # Build N-grams, (N-1)-grams, and list of tokens
 ngrams = {}

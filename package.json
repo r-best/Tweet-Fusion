@@ -1,8 +1,21 @@
 {
-  "dependencies": {
-    "child_process": "^1.0.2",
-    "express": "^4.16.2",
-    "path": "^0.12.7",
-    "url": "^0.11.0"
-  }
+    "name": "tweet-fusion",
+    "version": "0.0.1",
+    "main": "server.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/r-best/Tweet-Fusion.git"
+    },
+    "config": {
+        "port": 3000
+    },
+    "scripts": {
+        "start": "node server.js"
+    },
+    "dependencies": {
+        "child_process": "^1.0.2",
+        "express": "^4.16.2",
+        "path": "^0.12.7",
+        "url": "^0.11.0"
+    }
 }
