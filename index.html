@@ -1,0 +1,18 @@
+<!DOCTYPE html5>
+<html>
+    <head>
+        <title>Tweet Fusion</title>
+        <script>
+            document.getElementById("submitButton").addEventListener("click", ()=>{
+                var users = document.getElementById("input").value.split("\s+");
+                console.log(users);
+                // window.location = "/fusion"
+            });
+        </script>
+    </head>
+    <body>
+        <p>Type in Twitter screen names separated by spaces, i.e. '@user1 @user2 @user3 ...'</p>
+        <textarea id="input"></textarea>
+        <button type="submit" id="submitButton"></button>
+    </body>
+</html>
