@@ -9,7 +9,8 @@ html
                         users = users.split(/[\s\n]+/);
                         var N = document.getElementById("N").value;
                         var M = document.getElementById("M").value;
-                        var query = "/fusion?N=" + N + "&M=" + M;
+                        var R = document.getElementById("R").value;
+                        var query = "/fusion?N=" + N + "&M=" + M + "&R=" + R;
                         for(var i = 0; i < users.length; i++){
                             if(users[i].startsWith("@"))
                                 users[i] = users[i].substr(1);
@@ -36,5 +37,8 @@ html
         span N-gram size = 
         input#N(type="number" value=3 min=2 max=20)
         br
-        span Number of tweets to generate = 
-        input#M(type="number" value=100 min=1)
+        span # tweets to generate = 
+        input#M(type="number" value=100 min=1 max=10000)
+        br
+        span # tweets to fetch per user (multiples of 200) = 
+        input#R(type="number" value=1 min=1 max=10)

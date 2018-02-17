@@ -6,19 +6,20 @@ import sys
 import re
 
 def get_user_tweets(user):
+    tweets = []
     try:
-        user_tweets = api.user_timeline(screen_name=user, count=200)
-        tweets = []
-        for tweet in user_tweets:
-            if "RT @" not in tweet.text:
-                try:
-                    tweets.append(tweet.text.encode('ascii'))
-                except UnicodeEncodeError:
-                    continue
+        for r in range(1, R+1):
+            user_tweets = api.user_timeline(screen_name=user, count=200, page=r)
+            for tweet in user_tweets:
+                if "RT @" not in tweet.text:
+                    try:
+                        tweets.append(tweet.text.encode('ascii'))
+                    except UnicodeEncodeError:
+                        continue
         return tweets
     except tweepy.error.RateLimitError:
         print "Twitter API rate limit exceeded"
-        return []
+        return tweets
 
 # Remove first command line arg (it's the name of this file)
 sys.argv.pop(0)
@@ -26,11 +27,13 @@ sys.argv.pop(0)
 # Constants
 N = 3 # Value of N in N-gram
 M = 100 # Number of tweets to generate
+R = 1 # Number of requests to make per user (fetches 200 tweets per request)
 try:
     N = int(sys.argv.pop(0))
     M = int(sys.argv.pop(0))
+    R = int(sys.argv.pop(0))
 except ValueError:
-    print >> sys.stderr, "N or M was NaN"
+    print >> sys.stderr, "N, M, or R was NaN"
     sys.stderr.flush()
     sys.exit(0)
 
