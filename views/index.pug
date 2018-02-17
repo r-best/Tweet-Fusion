@@ -7,22 +7,34 @@ html
                     var users = document.getElementById("input").value;
                     if(!users.match(/^[\s\n]*$/)){
                         users = users.split(/[\s\n]+/);
-                        var query = "/fusion";
+                        var N = document.getElementById("N").value;
+                        var M = document.getElementById("M").value;
+                        var query = "/fusion?N=" + N + "&M=" + M;
                         for(var i = 0; i < users.length; i++){
                             if(users[i].startsWith("@"))
                                 users[i] = users[i].substr(1);
-                            if(i == 0)
-                                query += "?user=" + users[i];
-                            else
-                                query += "&user=" + users[i];
+                            query += "&user=" + users[i];
                         }
                         window.location = query;
                     }
                 });
             }
     body(onload="onload()")
+        h2 Enter some users and generate new tweets that are a mixture of all of them!
         p Type in Twitter screen names separated by spaces
         p i.e. '@user1 @user2 @user3 ...'
         textarea#input
         br
         button#submitButton(type="submit") Submit
+        br
+        br
+        br
+        br
+        br
+        br
+        p Special parameters:
+        span N-gram size = 
+        input#N(type="number" value=3 min=2 max=20)
+        br
+        span Number of tweets to generate = 
+        input#M(type="number" value=100 min=1)

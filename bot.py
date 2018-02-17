@@ -20,10 +20,19 @@ def get_user_tweets(user):
         print "Twitter API rate limit exceeded"
         return []
 
+# Remove first command line arg (it's the name of this file)
+sys.argv.pop(0)
+
 # Constants
-BOT_NAME = 'tweet-fuser'
-N = 3 # Value of N in N-gram, hardcoded to 3 for the sake of this hackathon
+N = 3 # Value of N in N-gram
 M = 100 # Number of tweets to generate
+try:
+    N = int(sys.argv.pop(0))
+    M = int(sys.argv.pop(0))
+except ValueError:
+    print >> sys.stderr, "N or M was NaN"
+    sys.stderr.flush()
+    sys.exit(0)
 
 # Read in the JSON file that contains the API keys for Twitter
 keys = json.loads(open('keys.json').read())
@@ -34,7 +43,6 @@ auth.set_access_token(keys['access_token'], keys['access_token_secret'])
 api = tweepy.API(auth)
 
 tweets = [] # Array of all tweets from given users
-sys.argv.pop(0) # Remove first command line arg (it's the name of this file)
 for user in sys.argv: # Rest of args should be Twitter screen names
     try:
         # Try to get the given user's tweets and add them to the list
@@ -132,7 +140,7 @@ for m in range(1, M+1):
     tweet = re.sub(r"\s*<end>", r"", tweet)
     tweet = re.sub(r"\s*'\s*", r"'", tweet)
     tweet = re.sub(r"\s*([,\.\!\?\)])", r"\1", tweet)
-    tweet = re.sub(r"(\()\s*", r"\1", tweet)
+    tweet = re.sub(r"(\(\$)\s*", r"\1", tweet)
     tweet = tweet.capitalize()
     print("SENTENCE " + str(m) + ": " + tweet)
 print("<ENDOFOUTPUT>")
