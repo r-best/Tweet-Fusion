@@ -5,12 +5,6 @@ import json
 import sys
 import re
 
-def println(msg):
-    print(msg+"\n")
-
-# def error(msg):
-#     print(msg+"\n", file=sys.stderr)
-
 def get_user_tweets(user):
     try:
         user_tweets = api.user_timeline(screen_name=user, count=200)
@@ -121,12 +115,10 @@ for m in range(1, M+1):
         for n in range(0, N-1):
             lastN1Words = [temp.pop()] + lastN1Words
         lastN1Words = " ".join(lastN1Words)
-        # print lastN1Words
-        # print tokens
+        
         for token in tokens:
             if (lastN1Words not in P) or (token not in P[lastN1Words]) or (P[lastN1Words][token] == 0):
                 continue
-            # print "a"
             counter += P[lastN1Words][token]
             if counter > rand:
                 tweet += " " + token
@@ -136,4 +128,6 @@ for m in range(1, M+1):
     tweet = re.sub(r"\s*'\s*", r"'", tweet)
     tweet = re.sub(r"\s*([,\.\!\?])", r"\1", tweet)
     tweet = tweet.capitalize()
-    print "SENTENCE " + str(m) + ": " + tweet
+    print("SENTENCE " + str(m) + ": " + tweet + "<br/>")
+print("<ENDOFOUTPUT>")
+sys.stdout.flush()

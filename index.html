@@ -3,16 +3,27 @@
     <head>
         <title>Tweet Fusion</title>
         <script>
-            document.getElementById("submitButton").addEventListener("click", ()=>{
-                var users = document.getElementById("input").value.split("\s+");
-                console.log(users);
-                // window.location = "/fusion"
-            });
+            function onload(){
+                document.getElementById("submitButton").addEventListener("click", ()=>{
+                    var users = document.getElementById("input").value.split(/[\s\n]+/);
+                    var query = "/fusion";
+                    for(var i = 0; i < users.length; i++){
+                        if(users[i].startsWith("@"))
+                            users[i] = users[i].substr(1);
+                        if(i == 0)
+                            query += "?user=" + users[i];
+                        else
+                            query += "&user=" + users[i];
+                    }
+                    window.location = query;
+                });
+            }
         </script>
     </head>
-    <body>
-        <p>Type in Twitter screen names separated by spaces, i.e. '@user1 @user2 @user3 ...'</p>
-        <textarea id="input"></textarea>
-        <button type="submit" id="submitButton"></button>
+    <body onload="onload()">
+        <p>Type in Twitter screen names separated by spaces</p>
+        <p>i.e. '@user1 @user2 @user3 ...'</p>
+        <textarea id="input"></textarea><br/>
+        <button type="submit" id="submitButton">Submit</button>
     </body>
 </html>
