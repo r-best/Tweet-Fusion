@@ -1,0 +1,28 @@
+html
+    head
+        title Tweet Fusion
+        script.
+            function onload(){
+                document.getElementById("submitButton").addEventListener("click", ()=>{
+                    var users = document.getElementById("input").value;
+                    if(!users.match(/^[\s\n]*$/)){
+                        users = users.split(/[\s\n]+/);
+                        var query = "/fusion";
+                        for(var i = 0; i < users.length; i++){
+                            if(users[i].startsWith("@"))
+                                users[i] = users[i].substr(1);
+                            if(i == 0)
+                                query += "?user=" + users[i];
+                            else
+                                query += "&user=" + users[i];
+                        }
+                        window.location = query;
+                    }
+                });
+            }
+    body(onload="onload()")
+        p Type in Twitter screen names separated by spaces
+        p i.e. '@user1 @user2 @user3 ...'
+        textarea#input
+        br
+        button#submitButton(type="submit") Submit

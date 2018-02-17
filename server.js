@@ -2,14 +2,16 @@ const url = require('url');
 const spawn = require('child_process').spawn;
 const path = require('path');
 const express = require('express');
+
 const app = express();
+app.set(`view engine`, `pug`);
 
 app.get('/', (req, res) => {
     res.redirect("/home");
 });
 
 app.get('/home', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.render(`index`);
 });
 
 app.get('/fusion', (req, res) => {
@@ -21,16 +23,16 @@ app.get('/fusion', (req, res) => {
     pythonProc.stdout.on('data', (data)=>{
         if(data.includes("<ENDOFOUTPUT>")){
             generatedTweets += data.toString().replace("<ENDOFOUTPUT>", "");
-            res.send(generatedTweets);
+            res.render(`fusion`, { tweets: generatedTweets.split(/\n+/) });
         }
         else
             generatedTweets += data.toString();
     });
     pythonProc.stderr.on('data', (data)=>{
-        res.send(`Error: ${data}`);
+        res.render(`error`, { message: `Error: ${data}` });
     });
     pythonProc.on('error', (err)=>{
-        res.send(`Error in child process: ${err}`);
+        res.render(`error`, { message: `Error in child process: ${err}` });
     });
 });
 
