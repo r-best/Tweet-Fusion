@@ -1,4 +1,6 @@
 from datetime import datetime
+from twitterauth import authenticate
+from generator import generate_tweets
 import re
 
 def get_last_update_time():
@@ -23,13 +25,8 @@ BOT_NAME = 'tweetfuser'
 last_update = get_last_update_time()
 print("LAST UPDATE: "+str(last_update))
 
-# Read in the JSON file that contains the API keys for Twitter
-keys = json.loads(open('data/keys.json').read())
-
-# Initialize Twitter API with keys from JSON file
-auth = tweepy.OAuthHandler(keys['consumer_key'], keys['consumer_secret'])
-auth.set_access_token(keys['access_token'], keys['access_token_secret'])
-api = tweepy.API(auth)
+# Get a Tweepy API object
+api = twitterauth.authenticate()
 
 def get_new_tweets():
     new_tweets = api.search(q='@'+BOT_NAME, rpp=100, show_user=1, include_entities=1)
@@ -47,6 +44,6 @@ for tweet in tweets:
         tweet_mentions.remove(BOT_NAME)
     if len(tweet_mentions) == 0:
         api.update_status(reply_mention + "It looks like you didnt mention anyone in this tweet for me to use", in_reply_to_status_id=tweet.id)
-    
-
+    generated_tweets = generate_tweets(3, 1, 5, api, tweet_mentions)
+    api.update_status(reply_mention + generate_tweets[0], in_reply_to_status_id=tweet.id)
 set_last_update_time()
