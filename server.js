@@ -17,7 +17,7 @@ app.get('/home', (req, res) => {
 app.get('/fusion', (req, res) => {
     let query = url.parse(req.url, true).query;
     let args = [query[`N`], query[`M`], query[`R`]].concat(query[`user`]);
-    let pythonProc = spawn('python', [`./bot.py`].concat(args));
+    let pythonProc = spawn('python', [`./generator.py`].concat(args));
 
     let generatedTweets = "";
 

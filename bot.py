@@ -1,150 +1,52 @@
 from datetime import datetime
-from random import random
-import tweepy
-import json
-import sys
 import re
 
-def get_user_tweets(user):
-    tweets = []
-    try:
-        for r in range(1, R+1):
-            user_tweets = api.user_timeline(screen_name=user, count=200, page=r)
-            for tweet in user_tweets:
-                if "RT @" not in tweet.text:
-                    try:
-                        tweets.append(tweet.text.encode('ascii'))
-                    except UnicodeEncodeError:
-                        continue
-        return tweets
-    except tweepy.error.RateLimitError:
-        print "Twitter API rate limit exceeded"
-        return tweets
+def get_last_update_time():
+    date_file = open('data/lastupdate.txt', 'r+')
+    temp = re.split(' |-|:|\\.', date_file.readline())
+    temp = [int(x) for x in temp]
+    return datetime(temp[0], temp[1], temp[2], temp[3] + 4, temp[4], temp[5])
 
-# Remove first command line arg (it's the name of this file)
-sys.argv.pop(0)
+
+def set_last_update_time(new_update_time):
+    date_file = open('lastupdate.txt', 'r+')
+    date_file.seek(0)
+    date_file.write(str(new_update_time))
+    date_file.truncate()
+    date_file.close()
+
 
 # Constants
-N = 3 # Value of N in N-gram
-M = 100 # Number of tweets to generate
-R = 1 # Number of requests to make per user (fetches 200 tweets per request)
-try:
-    N = int(sys.argv.pop(0))
-    M = int(sys.argv.pop(0))
-    R = int(sys.argv.pop(0))
-except ValueError:
-    print >> sys.stderr, "N, M, or R was NaN"
-    sys.stderr.flush()
-    sys.exit(0)
+BOT_NAME = 'tweetfuser'
+
+# Read last update time from file
+last_update = get_last_update_time()
+print("LAST UPDATE: "+str(last_update))
 
 # Read in the JSON file that contains the API keys for Twitter
-keys = json.loads(open('keys.json').read())
+keys = json.loads(open('data/keys.json').read())
 
 # Initialize Twitter API with keys from JSON file
 auth = tweepy.OAuthHandler(keys['consumer_key'], keys['consumer_secret'])
 auth.set_access_token(keys['access_token'], keys['access_token_secret'])
 api = tweepy.API(auth)
 
-tweets = [] # Array of all tweets from given users
-for user in sys.argv: # Rest of args should be Twitter screen names
-    try:
-        # Try to get the given user's tweets and add them to the list
-        temp = get_user_tweets(user)
-        tweets.extend(temp)
-    except tweepy.error.TweepError: # If error just continue to the next user
-        print "Unable to fetch tweets of user '"+str(user)+"', skipping"
-        continue
+def get_new_tweets():
+    new_tweets = api.search(q='@'+BOT_NAME, rpp=100, show_user=1, include_entities=1)
+    new_tweets[:] = [x for x in new_tweets if tweet.created_at < last_update and x.user.screen_name != BOT_NAME]
+    return new_tweets
 
-if len(tweets) == 0:
-    print >> sys.stderr, "No tweets were retrieved for the given users"
-    sys.stderr.flush()
-    sys.exit(0)
+# Save new "last updated" time to save to file at end
+new_update_time = datetime.now()
 
-# Build N-grams, (N-1)-grams, and list of tokens
-ngrams = {}
-n1grams = {}
-tokens = []
+tweets = get_new_tweets()
 for tweet in tweets:
-    # For each tweet, add whitespace around its punctuation marks, then 
-    # split on whitespace to make an array of all the tokens in the tweet
-    tweet = re.sub(r"([\(\)\$\.\!\?,'`\"%&:;])", r" \1 ", tweet)
-    tweet = tweet.lower()
-    tweet = tweet.split()
+    reply_mention = '@' + tweet.user.screen_name + ' '
+    tweet_mentions = [x.screen_name for x in tweet.entities.user_mentions]
+    if BOT_NAME in tweet_mentions:
+        tweet_mentions.remove(BOT_NAME)
+    if len(tweet_mentions) == 0:
+        api.update_status(reply_mention + "It looks like you didnt mention anyone in this tweet for me to use", in_reply_to_status_id=tweet.id)
+    
 
-    # Skip this tweet if it's not long enough
-    if len(tweet) < N:
-        continue
-
-    # Add N-1 <start> tags to front of tweet and <end> tags to back
-    for n in range(0, N-1):
-        tweet = ["<start>"] + tweet + ["<end>"]
-
-    # For each token in the tweet, construct and N-gram and an (N-1)-gram 
-    # from it and the respective number of tokens behind it
-    for i in range(N-2, len(tweet)):
-        # Start by building (N-1)-gram
-        n1gram = []
-        for n in range(0, N-1):
-            n1gram = [tweet[i-n]] + n1gram
-        n1gram = " ".join(n1gram)
-        if n1gram in n1grams:
-            n1grams[n1gram] += 1 # Increment the frequency of the (N-1)-gram
-        else:
-            n1grams[n1gram] = 1
-        # The N-gram is just the (N-1)-gram with the next token back tacked onto the front of it
-        ngram = tweet[i-N+1] + " " + n1gram
-        if ngram in ngrams:
-            ngrams[ngram] += 1 # Increment the frequency of the N-gram
-        else:
-            ngrams[ngram] = 1
-        # Add token to tokens list
-        tokens.append(tweet[i])
-# Uniqueify the tokens list
-tokens = list(set(tokens))
-
-# Calculate those delicious probabilities
-P = {} # A hash of hashes s.t. P[a][b] = P(b|a) = the probability that the next word is b given we've just seen a
-
-for n1gram in n1grams:
-    P[n1gram] = {}
-    for token in tokens:
-        ngram = n1gram + " " + token
-        if ngram in ngrams:
-            P[n1gram][token] = float(ngrams[ngram]) / float(n1grams[n1gram])
-
-# Generate tweets!
-for m in range(1, M+1):
-    # Initialize tweet with N-1 <start> tags
-    tweet = ""
-    for n in range(0, N-1):
-        tweet = tweet + "<start>"
-        if n < N-2:
-            tweet = tweet + " "
-
-    while "<end>" not in tweet:
-        rand = random()
-        counter = 0
-
-        # Get the last N-1 words of the current tweet
-        lastN1Words = []
-        temp = tweet.split()
-        for n in range(0, N-1):
-            lastN1Words = [temp.pop()] + lastN1Words
-        lastN1Words = " ".join(lastN1Words)
-        
-        for token in tokens:
-            if (lastN1Words not in P) or (token not in P[lastN1Words]) or (P[lastN1Words][token] == 0):
-                continue
-            counter += P[lastN1Words][token]
-            if counter > rand:
-                tweet += " " + token
-                break
-    tweet = re.sub(r"\s*<start>\s*", r"", tweet)
-    tweet = re.sub(r"\s*<end>", r"", tweet)
-    tweet = re.sub(r"\s*'\s*", r"'", tweet)
-    tweet = re.sub(r"\s*([,\.\!\?\)])", r"\1", tweet)
-    tweet = re.sub(r"(\(\$)\s*", r"\1", tweet)
-    tweet = tweet.capitalize()
-    print("SENTENCE " + str(m) + ": " + tweet)
-print("<ENDOFOUTPUT>")
-sys.stdout.flush()
+set_last_update_time()
