@@ -34,11 +34,18 @@ html
         br
         br
         p Special parameters:
-        span N-gram size = 
-        input#N(type="number" value=3 min=2 max=20)
-        br
-        span # tweets to generate = 
-        input#M(type="number" value=100 min=1 max=10000)
-        br
-        span # tweets to fetch per user (multiples of 200) = 
-        input#R(type="number" value=1 min=1 max=10)
+        ul
+            li
+                span N-gram size = 
+                input#N(type="number" value=3 min=2 max=20)
+                ul 
+                    li Affects lookbehind of model, ex when N=3, each word of generated tweets will be calculated using the 2 previous words (3 when N=4, 4 when N=5, etc..)
+                    li Higher number generally means more accurate model, but increases runtime so be ready to wait
+            li
+                span # tweets to generate = 
+                input#M(type="number" value=100 min=1 max=10000)
+            li
+                span # tweets to fetch per user (multiples of 200) = 
+                input#R(type="number" value=1 min=1 max=10)
+                ul
+                    li Warning: Twitter API can only fetch 200 tweets per request; this number is how many requests to make PER USER YOU INPUT, careful not to exceed the rate limit
